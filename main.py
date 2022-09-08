@@ -25,12 +25,12 @@ class User(db.Model):
 		self.uname = uname
 		self.password = password
 		self.level = level
-		
-		
+
+
 #table Book
 class Book(db.Model):
    __tablename__ = "book"
-     
+
    id= db.Column(db.Integer, primary_key=True)
    bookname = db.Column(db.Text)
    author = db.Column(db.Text)
@@ -54,10 +54,10 @@ class Book(db.Model):
    def __repr__(self):
        return f"book: {self.id},{self.bookname},{self.author},{self.ISBN},{self.publisher},{self.catalog},{self.price},{self.arrivedate}, {self.quantity}"
 
-#table Orders 
+#table Orders
 class Orders(db.Model):
    __tablename__ = "orders"
-     
+
    id= db.Column(db.Integer, primary_key=True)
    bookname = db.Column(db.Text)
    ISBN = db.Column(db.Text)
@@ -73,14 +73,14 @@ class Orders(db.Model):
        self.orderdate = orderdate
 
    def __repr__(self):
-       return f"order: {self.id},{self.bookname},{self.ISBN},{self.price},{self.buyer},{self.orderdate}"       
-       
-       
-db.create_all() 
-		
+       return f"order: {self.id},{self.bookname},{self.ISBN},{self.price},{self.buyer},{self.orderdate}"
+
+
+db.create_all()
+
 ADMIN_PASSWORD = 'admin'
 
-# 
+#
 @app.route('/')
 def login():
 	return render_template('login.html')
@@ -97,7 +97,7 @@ def register():
 				if request.form['adminpassword']==ADMIN_PASSWORD:
 					myLevel='manager'
 				if password == confirm_password:
-					db.session.add(User(fname=request.form['fname'], lname=request.form['lname'], uname=request.form['uname'], 
+					db.session.add(User(fname=request.form['fname'], lname=request.form['lname'], uname=request.form['uname'],
 					    email=request.form['email'], password=request.form['password'], level = myLevel))
 					db.session.commit()
 					return render_template('thankyou.html')
@@ -122,26 +122,27 @@ def wait():
 			try:
 				uname = request.form['uname']
 				password = request.form['password']
-				data = User.query.filter_by(uname=uname, password=password).first()
+					data = User.query.filter_by(uname=uname, password=password).first()
 				session['level'] = data.level
 				session['username'] = uname
-				if data is not None:
+				print('!!!!!',data)
+				if data is not None and uname!='' and password!='':
 					session['logged_in'] = True
-					return redirect(url_for('home'))  
+					return redirect(url_for('home'))
 				else:
 					return render_template('login.html',msg="Something wrong with Username or Password.")
 			except:
 				return render_template('login.html',msg="Something wrong with input")
-		
+
 		elif request.form["action"]=="register":
 			return render_template('register.html')
 
 		elif request.form["action"]=="register":
 			return render_template('home.html')
 
-		else:
+	else:
 			return render_template('login.html')
-		
+
 
 @app.route('/wait1', methods = ['POST', 'GET'])
 def wait1():
@@ -173,7 +174,7 @@ def logout():
 @app.route('/addBook')
 def addBook():
 	return render_template('addBook.html')
-	
+
 @app.route('/addBookSubmit')
 def addBookSubmit():
     bookname = request.args.get('bookname')
@@ -181,29 +182,29 @@ def addBookSubmit():
     ISBN = request.args.get('ISBN')
     publisher = request.args.get('publisher')
     catalog = str(request.args.get('catalog'))
-    price = float(request.args.get('price'))	
+    price = float(request.args.get('price'))
     arrive_year = int(request.args.get('arrivedate')[:4])
     arrive_month = int(request.args.get('arrivedate')[5:7])
     arrive_date = int(request.args.get('arrivedate')[8:10])
     arrivedate =datetime(arrive_year,arrive_month,arrive_date)
     quantity =  int(request.args.get('quantity'))
-	
-    a1 = Book(bookname,author,ISBN,publisher,catalog,price,arrivedate,quantity) 
+
+    a1 = Book(bookname,author,ISBN,publisher,catalog,price,arrivedate,quantity)
     db.session.add(a1)
     db.session.commit()
     return render_template('addbookcomplete.html')
 
 @app.route('/updateBook')
 def updateBook():
-	return render_template('updatebookpre.html')	
+	return render_template('updatebookpre.html')
 
 @app.route('/updateBookPre')
 def updateBookPre():
     ISBN = request.args.get('ISBN')
     data = Book.query.filter_by(ISBN=ISBN).first()
-    return render_template('updatebookedit.html', myBook = data)	
+    return render_template('updatebookedit.html', myBook = data)
 
-	
+
 @app.route('/updateBookSubmit')
 def updateBookSubmit():
     id = int(request.args.get('id'))
@@ -222,13 +223,13 @@ def updateBookSubmit():
     book.quantity =  int(request.args.get('quantity'))
     db.session.add(book)
     db.session.commit()
-    return render_template('updatebookpre.html')	
-	
-	
+    return render_template('updatebookpre.html')
+
+
 @app.route('/orderStatus')
 def orderStatus():
-    return render_template('orderstatuspre.html')	
-	
+    return render_template('orderstatuspre.html')
+
 @app.route('/orderStatusSubmit')
 def orderStatusSubmit():
     start_year = int(request.args.get('startdate')[:4])
@@ -238,40 +239,40 @@ def orderStatusSubmit():
     end_year = int(request.args.get('enddate')[:4])
     end_month = int(request.args.get('enddate')[5:7])
     end_date = int(request.args.get('enddate')[8:10])
-    endDate = datetime(end_year,end_month,end_date)	
+    endDate = datetime(end_year,end_month,end_date)
     data = Orders.query.filter(Orders.orderdate>startDate).filter(Orders.orderdate<endDate).all()
-    return render_template('orderStatus.html', myOrders = data)	
-	
-	
+    return render_template('orderStatus.html', myOrders = data)
+
+
 @app.route('/search')
 def search():
     c = str(request.args.get('catalog')).strip()
     resultset = Book.query.filter(Book.catalog==c)
     books = resultset.all()
-    return render_template('searchResult.html', myBooks = books)		
-	
+    return render_template('searchResult.html', myBooks = books)
+
 @app.route('/cart')
 def cart():
     c = str(request.args.get('books'))
     ids = c.replace('\'','').split(',')
     books =[]
-    for id in ids: 
+    for id in ids:
         resultset = Book.query.filter(Book.id==int(id))
         all = resultset.all()
         books.extend(all)
     totalPrice = 0
     for book in books:
         totalPrice = totalPrice + book.price
-    return render_template('cart.html', myBooks = books, myPrice = totalPrice, myIds = c)		
-	
+    return render_template('cart.html', myBooks = books, myPrice = totalPrice, myIds = c)
+
 @app.route('/cartSubmit')
 def cartSubmit():
     c = str(request.args.get('books'))
     ids = c.replace('\'','').split(',')
     books =[]
 	#update books and insert order table
-    result = 'false' 
-    for id in ids: 
+    result = 'false'
+    for id in ids:
         resultset = Book.query.filter(Book.id==int(id))
         all = resultset.all()
         book = all[0]
@@ -283,22 +284,22 @@ def cartSubmit():
         price = book.price
         orderdate = datetime.now()
         buyer = session['username']
-        order = Orders(bookname,ISBN,price, buyer, orderdate) 
+        order = Orders(bookname,ISBN,price, buyer, orderdate)
         db.session.add(order)
         db.session.commit()
         result = 'sucess'
-    return render_template('cartcomplete.html', myresult = result)			
+    return render_template('cartcomplete.html', myresult = result)
 
 @app.route('/orderNotify')
 def orderNotify():
     newdate = datetime.now()-timedelta(minutes=5000)
     data = Orders.query.filter(Orders.orderdate>newdate).all()
-    if len(data) ==0: 
+    if len(data) ==0:
        return '';
     result = " New orders:"
     for order in data:
         result = result + "<li>[book name("+order.bookname+"), ordered time("+order.orderdate.strftime("%m/%d/%Y, %H:%M:%S")+")]</li> <br/> ";
-    return result	
+    return result
 
 
 if __name__ == '__main__':
